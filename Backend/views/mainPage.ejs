@@ -1,0 +1,203 @@
+<% include common/header.ejs %>
+
+<style>
+    #map {
+        margin-top: 10px;
+        margin 7px;
+        height: 170px;
+        width: 90%;
+    }
+
+    #adress {
+        margin-top: 10%;
+        margin-left: 20px;
+        width: 350px;
+        height: 31.5px;
+        border-top-left-radius: 7px;
+        border-bottom-left-radius: 7px;
+        font-family: monospace;
+    }
+
+</style>
+<input type="text" placeholder="Adress" id="adress"><button class="btn btn-common" style="font-family: monospace">Знайти</button>
+<div id="map"></div>
+<script>
+    function initMap() {
+        var directionsRenderer = new google.maps.DirectionsRenderer();
+        var MeMarker = new google.maps.Marker();
+        var flag;
+        var point = new google.maps.LatLng(50.464379, 30.519131);
+        var opt = {
+            center: point,
+            zoom: 15
+        };
+        var map = new google.maps.Map(document.getElementById('map'), opt);
+        var marker = new google.maps.Marker({
+            position: point,
+            map: map,
+            icon: "assets/images/map-icon.png",
+            title: "Раді вас бачити!!!"
+        });
+
+
+        function geocodeLatLng(latlng, callback) {
+            //Модуль за роботу з адресою
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({
+                'location': latlng
+            }, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK && results[1]) {
+                    var adress = results[1].formatted_address;
+                    $("#adress").val(adress);
+                    callback(null, adress);
+                } else {
+                    callback(new Error("Can't	find	adress"));
+                }
+            });
+        }
+
+        google.maps.event.addListener(map,
+            'click',
+            function(me) {
+                var coordinates = me.latLng;
+                geocodeLatLng(coordinates, function(err, adress) {
+                    if (!err) {
+                        flag = true;
+                        MeMarker.setPosition(coordinates);
+                        MeMarker.setMap(map);
+                        MeMarker.setIcon("assets/images/home-icon.png");
+                        calculateRoute(coordinates, point, function(err) {
+                            if (!err) {
+
+                                console.log("Good");
+                            } else {
+                                console.log("Bad");
+                            }
+                        })
+                        var distance = getDistanceFromLatLonInKm(me.latLng.lat(), me.latLng.lng(), 50.464379, 30.519131);
+                        var time = (distance / 40).toString().substring(0, 5);
+                        if (distance < 1) {
+                            $(".temp").text(" > 5хв, з адреси: " + adress)
+                        }
+                        if (distance > 1) {
+                            $(".temp").text(time + " год, з адреси: " + adress);
+                        }
+                        console.log(distance);
+                        console.log(adress);
+                    } else {
+                        console.log("Немає адреси")
+                    }
+                })
+            });
+
+        if (flag) {
+            MeMarker.setMap(null);
+            directionsRenderer.setMap(null);
+
+        }
+        $(".btn-common").click(function() {
+                var adress = $("#adress").val();
+                var coord = geocodeAddress(adress, function(err){
+                        if (!err) {
+                            console.log(adress);
+                        } else {
+                            console.log("bad");
+                        }
+                    })
+                });
+
+            function geocodeAddress(address, callback) {
+                var geocoder = new google.maps.Geocoder();
+                var coordinates ;
+                geocoder.geocode({
+                    'address': address
+                }, function(results, status) {
+                    if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                         coordinates = results[0].geometry.location;
+                        MeMarker.setPosition( coordinates);
+                        MeMarker.setMap(map);
+                        MeMarker.setIcon("assets/images/home-icon.png");
+                calculateRoute( coordinates, point, function(err) {
+                            if (!err) {
+                                console.log("Good");
+                            } else {
+                                console.log("Bad");
+                            }
+                        })
+                        callback(null, coordinates);
+                    } else {
+                        callback(new Error("Can	not	find	the	adress"));
+                    }
+                });
+           return coordinates;
+            }
+
+            function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+                var R = 6371; // Radius of the earth in km
+                var dLat = deg2rad(lat2 - lat1); // deg2rad below
+                var dLon = deg2rad(lon2 - lon1);
+                var a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                var d = R * c; // Distance in km
+                return d;
+            }
+
+            function deg2rad(deg) {
+                return deg * (Math.PI / 180)
+            }
+
+            function calculateRoute(A_latlng, B_latlng, callback) {
+                var directionService = new google.maps.DirectionsService();
+                directionService.route({
+                    origin: A_latlng,
+                    destination: B_latlng,
+                    travelMode: google.maps.TravelMode["DRIVING"]
+                }, function(response, status) {
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        var leg = response.routes[0].legs[0];
+                        drawRoute(response);
+                        callback(null, {
+                            duration: leg.duration
+                        });
+                    } else {
+                        callback(new Error("Can'	not	find	direction"));
+                    }
+                });
+            }
+
+            function drawRoute(route) {
+
+                directionsRenderer.setMap(map);
+
+                directionsRenderer.setOptions({
+                    suppressMarkers: true
+                });
+
+                directionsRenderer.setDirections(route);
+
+            }
+        }
+
+</script>
+
+<!--<span class="temp-text"> Приблизный час доставки: </span><span class="temp"></span>-->
+<div class="filters">
+    <p class="all-pizza">Усі піци</p>
+    <div class="flex-button">
+        <button class="btn btn-outline-warning color"><span id="1">Усі</span></button>
+        <button class="btn btn-outline-warning color"><span id="1">Вега</span></button>
+        <button class="btn btn-outline-warning color"><span id="1">М’ясна</span></button>
+        <button class="btn btn-outline-warning color"><span id="1">З грибами</span></button>
+        <button class="btn btn-outline-warning color"><span id="1">З морепродуктами</span></button>
+        <button class="btn btn-outline-warning color"><span id="1"></span></button>
+
+    </div>
+</div>
+<div id="pizza_list" style="margin-right: 25%">
+
+</div>
+
+<% include common/footer.ejs %>

@@ -1,0 +1,26 @@
+<% include common/header.ejs %>
+<style>
+    #liqpay{
+        
+        margin-top:100px;
+        margin-right:300px;
+    }
+</style>
+<div class="owen">
+    <div id="liqpay"></div>
+ 
+    <div class="main-block">
+        <a href="/" class="back">Назад</a>
+
+        <div class="main-text">Введіть ваші данні</div>
+        <div class="block" id="1"><span class="star">*</span><input type="text" placeholder="  Ім'я" class="datainput"><span class="text"> Як вас звати?</span></div>
+        <div class="block" id="2"><span class="star">*</span><input type="text" placeholder="  Телефон" class="datainput"><span class="text"> +3800000000</span></div>
+        <div class="block" id="3"><input type="text" placeholder="  Email" class="datainput" style="margin-left: 30px"><span class="text"> name@example.com</span></div>
+        <div class="block" id="5"><textarea class="text-area" placeholder="Коментар"></textarea></div>
+       <button class="btn-order">Сплатити</button>
+    
+    </div>
+
+</div>
+<script src="//static.liqpay.ua/libjs/checkout.js" async></script>
+<% include common/footer.ejs %>
